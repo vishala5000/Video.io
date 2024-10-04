@@ -167,34 +167,7 @@
         });
 
         createVideoButton.addEventListener('click', async () => {
-            const { createFFmpeg, fetchFile } = FFmpeg;
-            const ffmpeg = createFFmpeg({ log: true });
-            await ffmpeg.load();
-
-            // Write images to ffmpeg FS
-            images.forEach((image, index) => {
-                const imageData = `data:image/png;base64,${image.data}`;
-                ffmpeg.FS('writeFile', `img${index}.png`, fetchFile(imageData));
-            });
-
-            // Create a text file with image sequence information for ffmpeg
-            const imageSequence = images.map((_, index) => `file 'img${index}.png'`).join('\n');
-            ffmpeg.FS('writeFile', 'images.txt', imageSequence);
-
-            // Run ffmpeg to create a video from the images
-            await ffmpeg.run('-f', 'concat', '-safe', '0', '-i', 'images.txt', '-vsync', 'vfr', '-pix_fmt', 'yuv420p', 'output.mp4');
-
-            // Read the result
-            const data = ffmpeg.FS('readFile', 'output.mp4');
-
-            // Create a URL for the video file
-            const videoURL = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-
-            // Create a download link for the video
-            const a = document.createElement('a');
-            a.href = videoURL;
-            a.download = 'quotes.mp4';
-            a.click();
+            alert("Video creation feature is not implemented yet.");
         });
     </script>
 
