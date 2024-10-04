@@ -106,10 +106,9 @@
 
             // Load the background image from the same directory
             const backgroundImage = new Image();
-            backgroundImage.src = 'bg.jpg'; // Pointing directly to bg.jpg in the same directory
+            backgroundImage.src = 'bg.jpg'; // Ensure 'bg.jpg' is in the same directory
 
             backgroundImage.onload = () => {
-                console.log("Background image loaded successfully.");
                 // Draw the background image
                 ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
@@ -172,10 +171,10 @@
             await ffmpeg.load();
 
             // Create video from images
-            images.forEach((image, index) => {
-                const base64Data = image.split(',')[1];
-                ffmpeg.FS('writeFile', `quote${index + 1}.png`, await fetch(image).then(res => res.arrayBuffer()));
-            });
+            for (let i = 0; i < images.length; i++) {
+                const base64Data = images[i].split(',')[1];
+                ffmpeg.FS('writeFile', `quote${i + 1}.png`, await fetch(images[i]).then(res => res.arrayBuffer()));
+            }
 
             await ffmpeg.run('-framerate', '1', '-i', 'quote%d.png', '-c:v', 'libx264', '-r', '30', '-pix_fmt', 'yuv420p', 'output.mp4');
 
