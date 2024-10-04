@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Image Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            background-color: black;
+            color: white;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: red;
+        }
+        #quoteInput {
+            width: 90%;
+            max-width: 600px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #fff;
+            border-radius: 4px;
+            background-color: red;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: red;
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: darkred;
+        }
+        #imagesContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+        .quoteImage {
+            max-width: 90%;
+            height: auto;
+            margin: 10px;
+            border: 1px solid white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Quote Image Generator</h1>
+    <input type="text" id="quoteInput" placeholder='Enter quotes separated by commas (e.g., "Quote 1", "Quote 2")'>
+    <button id="generateButton">Generate Images</button>
+    <button id="downloadButton" style="display:none;">Download Images</button>
+    <button id="createVideoButton" style="display:none;">Create Video</button>
+    <div id="imagesContainer"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        const generateButton = document.getElementById('generateButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const createVideoButton = document.getElementById('createVideoButton');
+        const imagesContainer = document.getElementById('imagesContainer');
+        let images = [];
+
+        generateButton.addEventListener('click', () => {
+            const quotes = document.getElementById('quoteInput').value.match(/"([^"]+)"/g);
+            imagesContainer.innerHTML = '';
+            images = [];
+            if (quotes) {
+                quotes.forEach((quote, index) => {
+                    const quoteText = quote.replace(/"/g, '');
+                    createImage(quoteText, index);
+                });
+                downloadButton.style.display = 'block';
+                createVideoButton.style.display = 'block';
+            } else {
+                alert("Please enter quotes in the format: \"Quote 1\", \"Quote 2\"");
+            }
+        });
+
+        function createImage(quote, index) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const size = 400; // Set canvas size for square images
+            canvas.width = size;
+            canvas.height = size;
+
+            // Load the background image from the same directory
+            const backgroundImage = new Image();
+            backgroundImage.src = 'bg.jpg'; // Pointing directly to bg.jpg in the same directory
+
+            backgroundImage.onload = () => {
+                console.log("Background image loaded successfully.");
+                // Draw the background image
+                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = 'white'; // White text for quotes
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const maxWidth = size - 40; // Leave some padding
+                const words = quote.split(' ');
+                let line = '';
+                const lines = [];
+
+                words.forEach(word => {
+                    const testLine = line + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    const testWidth = metrics.width;
+                    if (testWidth > maxWidth && line.length > 0) {
+                        lines.push(line);
+                        line = word + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                });
+                lines.push(line);
+
+                const lineHeight = 30;
+                const y = (canvas.height - (lines.length * lineHeight)) / 2 + lineHeight / 2;
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, canvas.width / 2, y + i * lineHeight);
+                });
+
+                const imgURL = canvas.toDataURL('image/png');
+                const img = document.createElement('img');
+                img.src = imgURL;
+                img.className = 'quoteImage';
+                imagesContainer.appendChild(img);
+                images.push({ data: imgURL.split(',')[1], name: `quote${index + 1}.png` });
+            };
+
+            backgroundImage.onerror = () => {
+                console.error("Failed to load the background image.");
+                alert("Failed to load the background image. Please check the file path.");
+            };
+        }
+
+        downloadButton.addEventListener('click', () => {
+            const zip = new JSZip();
+            images.forEach(image => {
+                zip.file(image.name, image.data, { base64: true });
+            });
+            zip.generateAsync({ type: 'blob' })
+                .then(content => {
+                    saveAs(content, 'quotes.zip');
+                });
+        });
+
+        createVideoButton.addEventListener('click', () => {
+            alert('Video creation feature is not implemented yet.');
+            // Placeholder for video creation functionality
+            // Implement video generation logic here
+        });
+    </script>
+
+</body>
+</html>
